@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "MyPlayerState.h"
 #include "MyGameState.generated.h"
 
 /**
@@ -73,9 +74,34 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Timer")
 	FOnRoundTimeUp OnRoundTimeUp;
 
+	//~ คนนำ -- กฎ "คนนำโดนล่า" ในวอลต์
+
+	/**
+	 * ผู้เล่นที่ถือคริสตอลมากที่สุดตอนนี้ -- AI ไล่คนนี้
+	 * null = ยังไม่มีใครนำ (ทุกคนถือ 0 ชิ้น) -> AI ยืนนิ่ง
+	 */
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentLeader, VisibleInstanceOnly, BlueprintReadOnly, Category = "Leader")
+	AMyPlayerState* CurrentLeader = nullptr;
+
+	/** ล็อกกี่วินาทีหลังเปลี่ยนเป้า -- กัน AI สลับไปมาตอนสองคนเก็บ-ทิ้งสลับกัน */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Leader")
+	float LeaderLockDuration = 1.0f;
+
+	/** Server-only: เลือกคนนำใหม่ เรียกทุกครั้งที่ CrystalCount ของใครเปลี่ยน */
+	UFUNCTION(BlueprintCallable, Category = "Leader")
+	void RecalculateLeader();
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLeaderChanged, AMyPlayerState*, NewLeader);
+	/** ยิงทุกครั้งที่คนนำเปลี่ยน (ทั้ง server และ client) -- เอาไปทำไอคอนมงกุฎเหนือหัวได้ */
+	UPROPERTY(BlueprintAssignable, Category = "Leader")
+	FOnLeaderChanged OnLeaderChanged;
+
 protected:
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnRep_CurrentLeader();
 
 	UFUNCTION()
 	void OnRep_RemainingTime();
@@ -89,4 +115,7 @@ private:
 
 	/** กันยิง OnRoundTimeUp ซ้ำ */
 	bool bHasFiredTimeUp = false;
+
+	/** เวลาที่เปลี่ยนเป้าได้อีกครั้ง (วินาทีของโลก) -- server เท่านั้นที่ใช้ */
+	float LeaderLockUntil = 0.f;
 };

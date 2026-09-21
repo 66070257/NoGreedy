@@ -1,6 +1,7 @@
 // No Greedy! game project
 
 #include "MyGameState.h"
+#include "MyPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 AMyGameState::AMyGameState()
@@ -88,6 +89,71 @@ FText AMyGameState::GetRemainingTimeAsText() const
 	return FText::FromString(GetRemainingTimeAsString());
 }
 
+void AMyGameState::RecalculateLeader()
+{
+	// ใครนำ = เรื่องของ server เท่านั้น client แค่รอค่าที่ replicate มา
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	// เริ่มจากเป้าเดิม -> ถือเท่ากันจะไม่เปลี่ยนเป้า (กฎใน "กฎคนนำโดนล่า")
+	AMyPlayerState* Best = CurrentLeader;
+
+	// เป้าเดิมอาจหลุดออกจากเกมไปแล้ว -- เช็คก่อนเอาไปเทียบ
+	if (!IsValid(Best))
+	{
+		Best = nullptr;
+	}
+
+	for (APlayerState* PS : PlayerArray)
+	{
+		AMyPlayerState* Candidate = Cast<AMyPlayerState>(PS);
+		if (Candidate == nullptr)
+		{
+			continue;
+		}
+
+		// TODO: ตอนทำระบบตกรอบ ให้ข้ามคนที่ bEliminated ตรงนี้
+
+		// เปลี่ยนเป้าเมื่อมีคน "มากกว่า" เป้าเดิมเท่านั้น เท่ากันไม่เปลี่ยน
+		if (Best == nullptr || Candidate->CrystalCount > Best->CrystalCount)
+		{
+			Best = Candidate;
+		}
+	}
+
+	// ทุกคนถือ 0 ชิ้น = ยังไม่มีคนนำ -> AI ยืนนิ่ง
+	if (Best != nullptr && Best->CrystalCount <= 0)
+	{
+		Best = nullptr;
+	}
+
+	if (Best == CurrentLeader)
+	{
+		return;
+	}
+
+	// ล็อก 1 วิหลังเปลี่ยนเป้า กันสลับไปมา
+	// แต่ถ้าเป้าหายไปเลย (ไม่มีใครนำแล้ว) ต้องเปลี่ยนทันที ไม่ต้องรอล็อก
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (CurrentLeader != nullptr && Best != nullptr && Now < LeaderLockUntil)
+	{
+		return;
+	}
+
+	CurrentLeader = Best;
+	LeaderLockUntil = Now + LeaderLockDuration;
+
+	// RepNotify ไม่ยิงให้ server ต้องเรียกเอง (เหมือน AMyPlayerState::AddCrystals)
+	OnRep_CurrentLeader();
+}
+
+void AMyGameState::OnRep_CurrentLeader()
+{
+	OnLeaderChanged.Broadcast(CurrentLeader);
+}
+
 void AMyGameState::OnRep_RemainingTime()
 {
 	HandleRemainingTimeChanged();
@@ -118,4 +184,5 @@ void AMyGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 
 	DOREPLIFETIME(AMyGameState, RemainingTime);
 	DOREPLIFETIME(AMyGameState, bTimerRunning);
+	DOREPLIFETIME(AMyGameState, CurrentLeader);
 }

@@ -1,6 +1,7 @@
 // No Greedy! game project
 
 #include "MyPlayerState.h"
+#include "MyGameState.h"
 #include "Net/UnrealNetwork.h"
 
 AMyPlayerState::AMyPlayerState()
@@ -19,6 +20,15 @@ void AMyPlayerState::AddCrystals(int32 Amount)
 
 	// RepNotify does not fire locally on the server, so call it explicitly
 	OnRep_CrystalCount();
+
+	// จำนวนเปลี่ยนเมื่อไหร่ คนนำอาจเปลี่ยนตาม -- ให้ GameState ตัดสินที่เดียว
+	if (UWorld* World = GetWorld())
+	{
+		if (AMyGameState* GS = World->GetGameState<AMyGameState>())
+		{
+			GS->RecalculateLeader();
+		}
+	}
 }
 
 void AMyPlayerState::OnRep_CrystalCount()
