@@ -1,18 +1,22 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// No Greedy! game project
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameState.h"
+#include "GameFramework/GameStateBase.h"
 #include "MyGameState.generated.h"
 
 /**
- * Tracks the round countdown -- the single source of truth for "RemainingTime"
- * that AMyGameMode drives on the server and every HUD reads on the client
- * (see "นาฬิกา" / "คลาส C++" in the design vault).
+ * นาฬิกานับถอยหลังของรอบ (300 วินาที ตามเอกสารเสนอ)
+ *
+ * นับเวลาด้วย DeltaTime ใน Tick() แบบเดียวกับ Week 2 (AMyCppActor::Tick)
+ * -- ไม่ใช้ TimerManager / SetTimer อีกต่อไป
+ *
+ * server เป็นเจ้าของเวลาจริงแล้ว replicate ค่ามาให้ทุกเครื่อง
+ * ส่วน client ก็นับลงเองทุกเฟรมด้วย เพื่อให้ HUD เดินลื่น ไม่กระตุกตามรอบ network
  */
 UCLASS()
-class NOGREEDY_API AMyGameState : public AGameState
+class NOGREEDY_API AMyGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
@@ -20,36 +24,58 @@ public:
 
 	AMyGameState();
 
-	/** ระยะเวลาต่อรอบ (วินาที) -- ค่าเริ่มต้น 300 วิ มาจากเอกสารเสนอ (ค่าล็อกในเอกสาร) ห้ามแก้โดยไม่ตกลงกันก่อน */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Greed|Timer")
+	/** นับถอยหลังทุกเฟรม -- หัวใจของระบบจับเวลาใหม่ */
+	virtual void Tick(float DeltaTime) override;
+
+	/** ความยาวของหนึ่งรอบ (วินาที) -- 300 วิ มาจากเอกสารเสนอ */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Timer")
 	float RoundDuration = 300.f;
 
-	/** เวลาที่เหลือของรอบปัจจุบัน (วินาที). Authoritative on the server, replicated to every client. */
-	UPROPERTY(ReplicatedUsing = OnRep_RemainingTime, VisibleAnywhere, BlueprintReadOnly, Category = "Greed|Timer")
-	float RemainingTime = 0.f;
+	/** เริ่มนับอัตโนมัติตอนเข้าเกมเลยไหม ถ้าปิดต้องเรียก StartRound() เอง */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Timer")
+	bool bAutoStartRound = true;
 
-	/** Server-only: เซ็ตเวลาที่เหลือใหม่ แล้ว sync ไปทุกเครื่อง (เรียกจาก AMyGameMode เท่านั้น) */
-	void SetRemainingTime(float NewRemainingTime);
+	/** เวลาที่เหลือของรอบปัจจุบัน (วินาที) */
+	UPROPERTY(ReplicatedUsing = OnRep_RemainingTime, VisibleInstanceOnly, BlueprintReadOnly, Category = "Timer")
+	float RemainingTime = 300.f;
 
-	/** เวลาที่เหลือ ปัดขึ้นเป็นวินาทีเต็ม สำหรับโชว์ HUD */
-	UFUNCTION(BlueprintPure, Category = "Greed|Timer")
+	/** นาฬิกากำลังเดินอยู่หรือเปล่า -- หยุดเดินเมื่อเวลาหมดหรือเรียก StopRound() */
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Timer")
+	bool bTimerRunning = false;
+
+	/** Server-only: เริ่มรอบใหม่ ตั้งเวลากลับไปที่ RoundDuration แล้วเริ่มเดิน */
+	UFUNCTION(BlueprintCallable, Category = "Timer")
+	void StartRound();
+
+	/** Server-only: หยุดนาฬิกาค้างไว้ที่เวลาปัจจุบัน */
+	UFUNCTION(BlueprintCallable, Category = "Timer")
+	void StopRound();
+
+	/** เวลาที่เหลือ ปัดขึ้นเป็นวินาทีเต็ม */
+	UFUNCTION(BlueprintPure, Category = "Timer")
 	int32 GetRemainingSeconds() const;
 
-	/** แปลงเวลาที่เหลือเป็นรูปแบบ mm:ss เช่น 300 -> "5:00", พร้อมใช้กับ HUD ได้ทันที */
-	UFUNCTION(BlueprintPure, Category = "Greed|Timer")
+	/** เวลาที่เหลือในรูปแบบ mm:ss เช่น "5:00" */
+	UFUNCTION(BlueprintPure, Category = "Timer")
 	FString GetRemainingTimeAsString() const;
 
+	/** เหมือน GetRemainingTimeAsString แต่เป็น Text -- ต่อเข้า Text Block ของ HUD ได้ตรง ๆ */
+	UFUNCTION(BlueprintPure, Category = "Timer")
+	FText GetRemainingTimeAsText() const;
+
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemainingTimeChanged, float, NewRemainingTime);
-	/** ยิงทุกครั้งที่ RemainingTime เปลี่ยน (ทั้ง server และ client) -- widget เอาไป "Bind Event to OnRemainingTimeChanged" ได้เลย ไม่ต้อง Tick/poll */
-	UPROPERTY(BlueprintAssignable, Category = "Greed|Timer")
+	/** ยิงทุกครั้งที่เวลาเปลี่ยน (ทั้ง server และ client) -- widget เอาไป Bind Event ได้ */
+	UPROPERTY(BlueprintAssignable, Category = "Timer")
 	FOnRemainingTimeChanged OnRemainingTimeChanged;
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRoundTimeUp);
-	/** ยิงครั้งเดียวตอนเวลาหมด (RemainingTime แตะ 0) ทั้ง server และ client */
-	UPROPERTY(BlueprintAssignable, Category = "Greed|Timer")
+	/** ยิงครั้งเดียวตอนเวลาแตะ 0 */
+	UPROPERTY(BlueprintAssignable, Category = "Timer")
 	FOnRoundTimeUp OnRoundTimeUp;
 
 protected:
+
+	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void OnRep_RemainingTime();
@@ -58,6 +84,9 @@ protected:
 
 private:
 
-	/** กันยิง OnRoundTimeUp ซ้ำหลายครั้งตอนเวลาแตะ 0 */
+	/** ยิง event เวลาเปลี่ยน + เช็คหมดเวลา ใช้ร่วมกันทั้งฝั่ง server (Tick) และ client (OnRep) */
+	void HandleRemainingTimeChanged();
+
+	/** กันยิง OnRoundTimeUp ซ้ำ */
 	bool bHasFiredTimeUp = false;
 };
