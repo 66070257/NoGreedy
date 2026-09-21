@@ -1,0 +1,45 @@
+# ===== Unreal Engine =====
+# Generated / build output
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+Platforms/*/Binaries/
+Platforms/*/Build/
+Platforms/*/Intermediate/
+
+# Plugin generated folders
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Visual Studio / Rider / IDE
+.vs/
+.idea/
+.vscode/
+*.sln
+*.suo
+*.sdf
+*.opensdf
+*.opendb
+*.VC.db
+*.VC.opendb
+*.user
+*.userprefs
+*.xcodeproj/
+*.xcworkspace/
+
+# Compiled / binary artifacts
+*.obj
+*.pdb
+*.lib
+*.dll
+*.exe
+*.ipa
+*.apk
+
+# Misc
+*.stackdump
+.DS_Store
+Thumbs.db
+desktop.ini
