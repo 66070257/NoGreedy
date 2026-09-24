@@ -31,6 +31,16 @@ public:
 
 protected:
 
+	/**
+	 * ให้ผู้เล่นเกิดที่ TargetPoint ที่ติด Tag = PlayerSpawnTag (PlayerSpanwPoint, PlayerSpanwPoint2)
+	 * host ได้จุดแรก คนที่สองได้จุดถัดไป -- ไม่มีจุดติด Tag (เช่น Lobby) = ใช้ PlayerStart ตามปกติ
+	 */
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+	/** Tag ที่ต้องใส่ใน Details -> Actor -> Tags ของ TargetPoint จุดเกิดผู้เล่น */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	FName PlayerSpawnTag = TEXT("PlayerSpawn");
+
 	/** คริสตอลที่จะโปรยตอนมีคนโดนจับ -- ตั้งเป็น BP_Crystal ใน BP_ThirdPersonGameMode (ว่าง = คริสตอลหายไปเฉย ๆ) */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	TSubclassOf<class ACrystal> CrystalClass;

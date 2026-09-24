@@ -4,6 +4,8 @@
 #include "Gameplay/MyGameState.h"
 #include "Gameplay/MyPlayerState.h"
 #include "Gameplay/Crystal.h"
+#include "EngineUtils.h"
+#include "Engine/TargetPoint.h"
 
 ANoGreedyGameMode::ANoGreedyGameMode()
 {
@@ -14,6 +16,35 @@ void ANoGreedyGameMode::TravelToGame()
 {
 	// Keep ?listen -- without it the host stops listening and clients cannot follow.
 	GetWorld()->ServerTravel(TEXT("/Game/Maps/Game?listen"));
+}
+
+AActor* ANoGreedyGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+	// รวม TargetPoint ที่ติด Tag จุดเกิดผู้เล่น
+	TArray<AActor*> SpawnPoints;
+	for (TActorIterator<ATargetPoint> It(GetWorld()); It; ++It)
+	{
+		if (It->ActorHasTag(PlayerSpawnTag))
+		{
+			SpawnPoints.Add(*It);
+		}
+	}
+
+	if (SpawnPoints.Num() == 0)
+	{
+		return Super::ChoosePlayerStart_Implementation(Player);
+	}
+
+	// เรียงตามชื่อให้ลำดับคงที่ แล้วแจกจุดตามลำดับผู้เล่นใน PlayerArray (0 = host)
+	SpawnPoints.Sort([](const AActor& A, const AActor& B) { return A.GetName() < B.GetName(); });
+
+	int32 Index = 0;
+	if (GameState && Player)
+	{
+		Index = FMath::Max(GameState->PlayerArray.IndexOfByKey(Player->PlayerState), 0);
+	}
+
+	return SpawnPoints[Index % SpawnPoints.Num()];
 }
 
 void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer)
