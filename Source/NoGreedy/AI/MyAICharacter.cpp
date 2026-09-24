@@ -52,20 +52,22 @@ bool AMyAICharacter::MeleeAttack()
 	{
 		return false;
 	}
-	LastAttackTime = Now;
 
 	// เป้าที่ตีได้มีแค่ผู้เล่น -> ไล่จาก PlayerArray ตรง ๆ ไม่ต้องมี sphere component แบบ Lab
 	// (ไม่ต้องไปตั้ง collision ให้ overlap กับแคปซูล ซึ่งพังเงียบได้)
 	AGameStateBase* GS = GetWorld()->GetGameState();
 	if (GS == nullptr)
 	{
-		return true;
+		return false;
 	}
 
 	const FVector Origin = GetActorLocation();
 	const FVector Forward = GetActorForwardVector();
 	const float CosThresh = FMath::Cos(FMath::DegreesToRadians(MeleeHalfAngle));
 
+	// หาคนในระยะให้ครบก่อน -- ไม่มีใครเลย = ไม่เหวี่ยง ไม่เสียคูลดาวน์
+	// AMyAIController::CatchPerceived เรียกซ้ำทุก 0.2 วิ ถ้าเหวี่ยงวืดได้ AI จะเหวี่ยงรัว
+	TArray<APawn*> Hits;
 	for (APlayerState* PS : GS->PlayerArray)
 	{
 		APawn* T = PS ? PS->GetPawn() : nullptr;
@@ -88,6 +90,31 @@ bool AMyAICharacter::MeleeAttack()
 			continue;
 		}
 
+		Hits.Add(T);
+	}
+
+	if (Hits.Num() == 0)
+	{
+		return false;
+	}
+
+	LastAttackTime = Now;
+
+	// หันหน้าเข้าหาคนที่ใกล้สุดก่อนเหวี่ยง (เฉพาะแกน Yaw ไม่ก้ม/เงย)
+	// server ตั้งแล้ว CharacterMovement replicate การหมุนให้ทุกเครื่องเอง -> ท่าตีทุกจอออกไปทางผู้เล่น
+	APawn* Nearest = Hits[0];
+	for (APawn* T : Hits)
+	{
+		if (FVector::DistSquared(T->GetActorLocation(), Origin) < FVector::DistSquared(Nearest->GetActorLocation(), Origin))
+		{
+			Nearest = T;
+		}
+	}
+	const FVector ToNearest = Nearest->GetActorLocation() - Origin;
+	SetActorRotation(FRotator(0.f, ToNearest.Rotation().Yaw, 0.f));
+
+	for (APawn* T : Hits)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("CATCH: %s hit %s"), *GetName(), *T->GetName());
 
 		// ตีทีเดียวตาย -- ผู้เล่นตีใครไม่ได้ และคนฆ่าได้มีแค่ AI ตัวนี้
@@ -99,7 +126,7 @@ bool AMyAICharacter::MeleeAttack()
 		}
 	}
 
-	// เหวี่ยงแล้วโชว์ท่าเสมอ ถึงจะวืดก็ตาม -- หนึ่ง multicast ต่อหนึ่งการเหวี่ยง
+	// หนึ่ง multicast ต่อหนึ่งการเหวี่ยง
 	MulticastPlayAttack();
 	return true;
 }

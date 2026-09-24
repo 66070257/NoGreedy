@@ -42,15 +42,16 @@ public:
 	//~ ตีจับ -- ระยะ/กรวยแบบ Lab แต่โดนแล้วสั่ง GameMode->EliminatePlayer ตรง ๆ (ตีทีเดียวตาย)
 
 	/**
-	 * ระยะตี (จุดกลางถึงจุดกลาง) -- MoveTo นับ AcceptRadius จาก "ขอบแคปซูล" ทั้งสองตัว
-	 * ระยะที่หยุดจริง = AcceptRadius + 42 + 42 -> ตั้ง AcceptRadius ≤ 50 ไม่งั้นเดินถึงแล้วตีวืดตลอด
+	 * ระยะตี (จุดกลางถึงจุดกลาง) -- ต้องเท่ากับ SightRadius ใน AMyAIController
+	 * MoveTo นับ AcceptRadius จาก "ขอบแคปซูล" ทั้งสองตัว -> ระยะที่หยุดจริง = AcceptRadius + 42 + 42
+	 * ตั้ง AcceptRadius ≤ 50 ไม่งั้น AI หยุดก่อนเข้าระยะมองเห็น/ระยะตี
 	 */
 	UPROPERTY(EditAnywhere, Category = "AI|Melee")
 	float MeleeRange = 150.f;
 
-	/** ครึ่งมุมกรวยด้านหน้า (องศา) */
+	/** ครึ่งมุมกรวยด้านหน้า (องศา) -- ต้องเท่ากับ PeripheralVisionAngle ของ Sight ใน AMyAIController */
 	UPROPERTY(EditAnywhere, Category = "AI|Melee")
-	float MeleeHalfAngle = 60.f;
+	float MeleeHalfAngle = 180.f;
 
 	/** เวลาขั้นต่ำระหว่างการเหวี่ยงแต่ละครั้ง (วินาที) -- ตรงกับคูลดาวน์หลังจับ 1.5 วิในวอลต์ */
 	UPROPERTY(EditAnywhere, Category = "AI|Melee")
@@ -61,8 +62,8 @@ public:
 	class UAnimMontage* AttackMontage;
 
 	/**
-	 * SERVER ONLY -- เหวี่ยงหนึ่งที ใครในกรวยหน้าโดนหมด
-	 * @return false ถ้ายังติดคูลดาวน์ (ไม่ได้เหวี่ยงเลย)
+	 * SERVER ONLY -- ถ้ามีผู้เล่นในกรวยหน้า เหวี่ยงหนึ่งทีแล้วโดนหมดทุกคนในกรวย
+	 * @return false ถ้ายังติดคูลดาวน์ หรือไม่มีใครในระยะ (ไม่เหวี่ยง ไม่เสียคูลดาวน์)
 	 */
 	bool MeleeAttack();
 
