@@ -41,4 +41,5 @@ void AMyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMyPlayerState, CrystalCount);
+	DOREPLIFETIME(AMyPlayerState, bEliminated);
 }

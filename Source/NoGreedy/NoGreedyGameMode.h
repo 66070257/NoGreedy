@@ -18,6 +18,26 @@ public:
 	
 	/** Constructor */
 	ANoGreedyGameMode();
+
+	/** SERVER ONLY -- moves the host from the Lobby to the Game map; every client follows automatically */
+	UFUNCTION(BlueprintCallable, Category="Rules")
+	void TravelToGame();
+
+	/**
+	 * SERVER ONLY -- ผู้เล่นโดน AI จับ (เรียกจาก AMyAICharacter::MeleeAttack)
+	 * ตกรอบ -> คริสตอลกระจายลงสนาม -> ลบร่าง -> ให้ GameState เลือกคนนำใหม่ทันที
+	 */
+	void EliminatePlayer(AController* Victim, AController* Killer);
+
+protected:
+
+	/** คริสตอลที่จะโปรยตอนมีคนโดนจับ -- ตั้งเป็น BP_Crystal ใน BP_ThirdPersonGameMode (ว่าง = คริสตอลหายไปเฉย ๆ) */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	TSubclassOf<class ACrystal> CrystalClass;
+
+	/** รัศมีที่คริสตอลกระจายรอบจุดที่โดนจับ */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	float ScatterRadius = 300.f;
 };
 
 

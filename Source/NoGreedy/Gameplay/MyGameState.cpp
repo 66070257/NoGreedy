@@ -1,4 +1,4 @@
-// No Greedy! game project
+﻿// No Greedy! game project
 
 #include "MyGameState.h"
 #include "MyPlayerState.h"
@@ -57,6 +57,7 @@ void AMyGameState::StartRound()
 	RemainingTime = RoundDuration;
 	bTimerRunning = true;
 	bHasFiredTimeUp = false;
+	Winner = nullptr;
 
 	HandleRemainingTimeChanged();
 }
@@ -89,6 +90,28 @@ FText AMyGameState::GetRemainingTimeAsText() const
 	return FText::FromString(GetRemainingTimeAsString());
 }
 
+FText AMyGameState::GetScoreboardText(const APlayerState* LocalPlayer) const
+{
+	FString Result;
+	for (APlayerState* PS : PlayerArray)
+	{
+		if (const AMyPlayerState* MPS = Cast<AMyPlayerState>(PS))
+		{
+			FString Line = FString::Printf(TEXT("%s : %d%s"),
+				*MPS->GetPlayerName(), MPS->CrystalCount,
+				(MPS == Winner) ? TEXT(" WINNER") : TEXT(""));
+
+			// ตัวเอง -> แท็ก <Me> ตรงกับแถวชื่อ "Me" ใน Text Style Set ของ Rich Text Block
+			if (MPS == LocalPlayer)
+			{
+				Line = FString::Printf(TEXT("<Me>%s</>"), *Line);
+			}
+			Result += Line + TEXT("\n");
+		}
+	}
+	return FText::FromString(Result);
+}
+
 void AMyGameState::RecalculateLeader()
 {
 	// ใครนำ = เรื่องของ server เท่านั้น client แค่รอค่าที่ replicate มา
@@ -100,8 +123,9 @@ void AMyGameState::RecalculateLeader()
 	// เริ่มจากเป้าเดิม -> ถือเท่ากันจะไม่เปลี่ยนเป้า (กฎใน "กฎคนนำโดนล่า")
 	AMyPlayerState* Best = CurrentLeader;
 
-	// เป้าเดิมอาจหลุดออกจากเกมไปแล้ว -- เช็คก่อนเอาไปเทียบ
-	if (!IsValid(Best))
+	// เป้าเดิมอาจหลุดออกจากเกมหรือเพิ่งโดนจับ -- เช็คก่อนเอาไปเทียบ
+	const bool bLeaderGone = !IsValid(Best) || Best->bEliminated;
+	if (bLeaderGone)
 	{
 		Best = nullptr;
 	}
@@ -109,12 +133,11 @@ void AMyGameState::RecalculateLeader()
 	for (APlayerState* PS : PlayerArray)
 	{
 		AMyPlayerState* Candidate = Cast<AMyPlayerState>(PS);
-		if (Candidate == nullptr)
+		// คนตกรอบแล้วไม่นับเป็นคนนำ
+		if (Candidate == nullptr || Candidate->bEliminated)
 		{
 			continue;
 		}
-
-		// TODO: ตอนทำระบบตกรอบ ให้ข้ามคนที่ bEliminated ตรงนี้
 
 		// เปลี่ยนเป้าเมื่อมีคน "มากกว่า" เป้าเดิมเท่านั้น เท่ากันไม่เปลี่ยน
 		if (Best == nullptr || Candidate->CrystalCount > Best->CrystalCount)
@@ -135,9 +158,9 @@ void AMyGameState::RecalculateLeader()
 	}
 
 	// ล็อก 1 วิหลังเปลี่ยนเป้า กันสลับไปมา
-	// แต่ถ้าเป้าหายไปเลย (ไม่มีใครนำแล้ว) ต้องเปลี่ยนทันที ไม่ต้องรอล็อก
+	// แต่ถ้าเป้าหายไปเลย (ไม่มีใครนำแล้ว / เป้าโดนจับ) ต้องเปลี่ยนทันที ไม่ต้องรอล็อก
 	const float Now = GetWorld()->GetTimeSeconds();
-	if (CurrentLeader != nullptr && Best != nullptr && Now < LeaderLockUntil)
+	if (!bLeaderGone && Best != nullptr && Now < LeaderLockUntil)
 	{
 		return;
 	}
@@ -169,12 +192,86 @@ void AMyGameState::HandleRemainingTimeChanged()
 		{
 			bHasFiredTimeUp = true;
 			OnRoundTimeUp.Broadcast();
+
+			// ตัดสินบน server เท่านั้น client รอ Winner ที่ replicate มา
+			if (HasAuthority())
+			{
+				DecideWinnerByCrystals();
+			}
 		}
 	}
 	else
 	{
 		// รอบใหม่เริ่มแล้ว เปิดให้ยิง time-up ได้อีกครั้ง
 		bHasFiredTimeUp = false;
+	}
+}
+
+void AMyGameState::SetWinner(AMyPlayerState* NewWinner)
+{
+	if (!HasAuthority() || Winner != nullptr || NewWinner == nullptr)
+	{
+		return;
+	}
+
+	Winner = NewWinner;
+	StopRound();
+
+	UE_LOG(LogTemp, Warning, TEXT("WINNER: %s"), *Winner->GetPlayerName());
+}
+
+void AMyGameState::CheckLastSurvivor()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AMyPlayerState* Survivor = nullptr;
+	int32 SurvivorCount = 0;
+	for (APlayerState* PS : PlayerArray)
+	{
+		AMyPlayerState* MPS = Cast<AMyPlayerState>(PS);
+		if (MPS && !MPS->bEliminated)
+		{
+			Survivor = MPS;
+			++SurvivorCount;
+		}
+	}
+
+	if (SurvivorCount == 1)
+	{
+		SetWinner(Survivor);
+	}
+}
+
+void AMyGameState::DecideWinnerByCrystals()
+{
+	AMyPlayerState* Best = nullptr;
+	bool bTie = false;
+	for (APlayerState* PS : PlayerArray)
+	{
+		AMyPlayerState* MPS = Cast<AMyPlayerState>(PS);
+		if (MPS == nullptr || MPS->bEliminated)
+		{
+			continue;
+		}
+
+		if (Best == nullptr || MPS->CrystalCount > Best->CrystalCount)
+		{
+			Best = MPS;
+			bTie = false;
+		}
+		else if (MPS->CrystalCount == Best->CrystalCount)
+		{
+			bTie = true;
+		}
+	}
+
+	// TODO: เสมอ -> เริ่มรอบใหม่ (GDD ข้อ 8) ตอนนี้แค่ไม่ประกาศผู้ชนะ
+	if (Best != nullptr && !bTie)
+	{
+		SetWinner(Best);
 	}
 }
 
@@ -185,4 +282,5 @@ void AMyGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AMyGameState, RemainingTime);
 	DOREPLIFETIME(AMyGameState, bTimerRunning);
 	DOREPLIFETIME(AMyGameState, CurrentLeader);
+	DOREPLIFETIME(AMyGameState, Winner);
 }

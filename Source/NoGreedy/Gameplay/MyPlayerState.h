@@ -27,6 +27,10 @@ public:
 	/** Server-only: adds (or removes, with a negative amount) crystals and keeps clients in sync. */
 	void AddCrystals(int32 Amount);
 
+	/** โดน AI จับแล้ว -- ตกรอบ ไม่นับเป็นคนนำอีก (server ตั้ง, replicate ให้ HUD อ่าน) */
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Greed")
+	bool bEliminated = false;
+
 protected:
 
 	UFUNCTION()

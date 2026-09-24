@@ -38,4 +38,39 @@ public:
 	/** Behavior Tree เรียกตอนสลับกิ่ง ไล่ <-> เดินวน */
 	UFUNCTION(BlueprintCallable, Category = "AI|Movement")
 	void SetChasing(bool bChasing);
+
+	//~ ตีจับ -- ระยะ/กรวยแบบ Lab แต่โดนแล้วสั่ง GameMode->EliminatePlayer ตรง ๆ (ตีทีเดียวตาย)
+
+	/**
+	 * ระยะตี (จุดกลางถึงจุดกลาง) -- MoveTo นับ AcceptRadius จาก "ขอบแคปซูล" ทั้งสองตัว
+	 * ระยะที่หยุดจริง = AcceptRadius + 42 + 42 -> ตั้ง AcceptRadius ≤ 50 ไม่งั้นเดินถึงแล้วตีวืดตลอด
+	 */
+	UPROPERTY(EditAnywhere, Category = "AI|Melee")
+	float MeleeRange = 150.f;
+
+	/** ครึ่งมุมกรวยด้านหน้า (องศา) */
+	UPROPERTY(EditAnywhere, Category = "AI|Melee")
+	float MeleeHalfAngle = 60.f;
+
+	/** เวลาขั้นต่ำระหว่างการเหวี่ยงแต่ละครั้ง (วินาที) -- ตรงกับคูลดาวน์หลังจับ 1.5 วิในวอลต์ */
+	UPROPERTY(EditAnywhere, Category = "AI|Melee")
+	float MinAttackInterval = 1.5f;
+
+	/** ท่าตี -- ตั้งใน BP_MyAICharacter (เช่น AM_ComboAttack หรือ montage ที่ทำจาก MM_Attack_01) */
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Melee")
+	class UAnimMontage* AttackMontage;
+
+	/**
+	 * SERVER ONLY -- เหวี่ยงหนึ่งที ใครในกรวยหน้าโดนหมด
+	 * @return false ถ้ายังติดคูลดาวน์ (ไม่ได้เหวี่ยงเลย)
+	 */
+	bool MeleeAttack();
+
+	/** เล่นท่าตีทุกเครื่อง -- ของประดับล้วน ไม่มีดาเมจในนี้ */
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayAttack();
+
+private:
+
+	float LastAttackTime = -1000.f;
 };

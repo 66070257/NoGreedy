@@ -64,6 +64,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Timer")
 	FText GetRemainingTimeAsText() const;
 
+	/**
+	 * คริสตอลของผู้เล่นทุกคน บรรทัดละคน -- ต่อเข้า Rich Text Block ของ HUD (แทน timer RefreshScoreboard)
+	 * บรรทัดของ LocalPlayer ถูกครอบด้วย <Me>...</> ให้ Rich Text ระบายสีเขียว
+	 */
+	UFUNCTION(BlueprintPure, Category = "Score")
+	FText GetScoreboardText(const APlayerState* LocalPlayer) const;
+
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemainingTimeChanged, float, NewRemainingTime);
 	/** ยิงทุกครั้งที่เวลาเปลี่ยน (ทั้ง server และ client) -- widget เอาไป Bind Event ได้ */
 	UPROPERTY(BlueprintAssignable, Category = "Timer")
@@ -82,6 +89,18 @@ public:
 	 */
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentLeader, VisibleInstanceOnly, BlueprintReadOnly, Category = "Leader")
 	AMyPlayerState* CurrentLeader = nullptr;
+
+	//~ ผู้ชนะ -- GDD: รอดคนเดียวชนะทันที · หมดเวลา = ถือมากสุดชนะ · เสมอ = ไม่มีผู้ชนะ
+
+	/** ผู้ชนะของรอบ null = ยังไม่จบ (หรือเสมอ) -- server ตั้ง, replicate ให้ HUD อ่าน */
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Winner")
+	AMyPlayerState* Winner = nullptr;
+
+	/** Server-only: ประกาศผู้ชนะแล้วหยุดนาฬิกา (ตั้งได้ครั้งเดียวต่อรอบ) */
+	void SetWinner(AMyPlayerState* NewWinner);
+
+	/** Server-only: เหลือผู้เล่นรอดคนเดียว -> คนนั้นชนะ */
+	void CheckLastSurvivor();
 
 	/** ล็อกกี่วินาทีหลังเปลี่ยนเป้า -- กัน AI สลับไปมาตอนสองคนเก็บ-ทิ้งสลับกัน */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Leader")
@@ -112,6 +131,9 @@ private:
 
 	/** ยิง event เวลาเปลี่ยน + เช็คหมดเวลา ใช้ร่วมกันทั้งฝั่ง server (Tick) และ client (OnRep) */
 	void HandleRemainingTimeChanged();
+
+	/** Server-only: หมดเวลา -> คนรอดที่ถือมากสุดชนะ เท่ากัน = ไม่ประกาศ */
+	void DecideWinnerByCrystals();
 
 	/** กันยิง OnRoundTimeUp ซ้ำ */
 	bool bHasFiredTimeUp = false;
