@@ -8,22 +8,29 @@
  *  Simple GameMode for a third person game
  */
 UCLASS(abstract)
-class ANoGreedyGameMode : public AGameModeBase
+class NOGREEDY_API ANoGreedyGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	
-	/** Constructor */
-	ANoGreedyGameMode();
 
 	UFUNCTION(BlueprintCallable, Category="Rules")
 	void TravelToGame();
 
-	void EliminatePlayer(AController* Victim, AController* Killer);
+	/** Server only. bDropCrystals = false means the victim's crystals are lost (e.g. fell into a pit) */
+	void EliminatePlayer(AController* Victim, AController* Killer, bool bDropCrystals = true);
 
 protected:
+	virtual void BeginPlay() override;
+
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+	UFUNCTION()
+	void HandleRoundOver(class ANoGreedyPlayerState* RoundWinner);
+
+	/** Seconds after the round ends before restarting the Game map; 0 or less disables it */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	float RestartDelay = 5.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	FName PlayerSpawnTag = TEXT("PlayerSpawn");
@@ -33,5 +40,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float ScatterRadius = 300.f;
+
+private:
+	FTimerHandle RestartTimerHandle;
 };
 

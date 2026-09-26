@@ -1,10 +1,10 @@
-#include "BTService_TryCatch.h"
-#include "MyAICharacter.h"
+#include "BTService_MeleeAttack.h"
+#include "NoGreedyAICharacter.h"
 #include "AIController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
-UBTService_TryCatch::UBTService_TryCatch()
+UBTService_MeleeAttack::UBTService_MeleeAttack()
 {
-	NodeName = TEXT("Try Catch While Moving");
+	NodeName = TEXT("Melee Attack While Moving");
 
 	Interval = 0.1f;
 	RandomDeviation = 0.0f;
@@ -13,7 +13,7 @@ UBTService_TryCatch::UBTService_TryCatch()
 	bCallTickOnSearchStart = true;
 }
 
-void UBTService_TryCatch::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+void UBTService_MeleeAttack::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
@@ -23,7 +23,7 @@ void UBTService_TryCatch::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		return;
 	}
 
-	AMyAICharacter* Me = Cast<AMyAICharacter>(AICon->GetPawn());
+	ANoGreedyAICharacter* Me = Cast<ANoGreedyAICharacter>(AICon->GetPawn());
 	if (Me == nullptr)
 	{
 		return;

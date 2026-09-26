@@ -1,12 +1,30 @@
 #include "NoGreedyGameMode.h"
-#include "Gameplay/MyGameState.h"
-#include "Gameplay/MyPlayerState.h"
+#include "Gameplay/NoGreedyGameState.h"
+#include "Gameplay/NoGreedyPlayerState.h"
 #include "Gameplay/Crystal.h"
 #include "EngineUtils.h"
 #include "Engine/TargetPoint.h"
+#include "TimerManager.h"
+#include "NoGreedy.h"
 
-ANoGreedyGameMode::ANoGreedyGameMode()
+void ANoGreedyGameMode::BeginPlay()
 {
+	Super::BeginPlay();
+
+	if (ANoGreedyGameState* GS = GetGameState<ANoGreedyGameState>())
+	{
+		GS->OnRoundOver.AddDynamic(this, &ANoGreedyGameMode::HandleRoundOver);
+	}
+}
+
+void ANoGreedyGameMode::HandleRoundOver(ANoGreedyPlayerState* RoundWinner)
+{
+	if (RestartDelay <= 0.f)
+	{
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToGame, RestartDelay, false);
 }
 
 void ANoGreedyGameMode::TravelToGame()
@@ -41,27 +59,33 @@ AActor* ANoGreedyGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return SpawnPoints[Index % SpawnPoints.Num()];
 }
 
-void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer)
+void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer, bool bDropCrystals)
 {
 	if (Victim == nullptr)
 	{
 		return;
 	}
 
-	AMyPlayerState* PS = Victim->GetPlayerState<AMyPlayerState>();
-	if (PS == nullptr || PS->bEliminated)
+	// Nobody can be eliminated once the round has been decided
+	ANoGreedyGameState* GS = GetGameState<ANoGreedyGameState>();
+	if (GS && GS->IsRoundOver())
 	{
 		return;
 	}
 
-	PS->bEliminated = true;
+	ANoGreedyPlayerState* PS = Victim->GetPlayerState<ANoGreedyPlayerState>();
+	if (PS == nullptr || PS->IsEliminated())
+	{
+		return;
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("ELIMINATED: %s (caught by %s) dropping %d crystals"),
-		*PS->GetPlayerName(), *GetNameSafe(Killer), PS->CrystalCount);
+	const int32 Count = PS->Eliminate();
+
+	UE_LOG(LogNoGreedy, Warning, TEXT("ELIMINATED: %s (caught by %s) %s %d crystals"),
+		*PS->GetPlayerName(), *GetNameSafe(Killer), bDropCrystals ? TEXT("dropping") : TEXT("losing"), Count);
 
 	APawn* DeadPawn = Victim->GetPawn();
-	const int32 Count = PS->CrystalCount;
-	if (DeadPawn && CrystalClass)
+	if (bDropCrystals && DeadPawn && CrystalClass)
 	{
 		const FVector Center = DeadPawn->GetActorLocation();
 		for (int32 i = 0; i < Count; ++i)
@@ -75,14 +99,12 @@ void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer
 		}
 	}
 
-	PS->AddCrystals(-Count);
-
 	if (DeadPawn)
 	{
 		DeadPawn->Destroy();
 	}
 
-	if (AMyGameState* GS = GetGameState<AMyGameState>())
+	if (GS)
 	{
 		GS->CheckLastSurvivor();
 	}

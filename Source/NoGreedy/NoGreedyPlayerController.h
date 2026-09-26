@@ -12,7 +12,7 @@ class UUserWidget;
  *  Manages input mappings
  */
 UCLASS(abstract)
-class ANoGreedyPlayerController : public APlayerController
+class NOGREEDY_API ANoGreedyPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
@@ -20,11 +20,11 @@ protected:
 
 	/** Input Mapping Contexts */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> DefaultMappingContexts;
+	TArray<TObjectPtr<UInputMappingContext>> DefaultMappingContexts;
 
 	/** Input Mapping Contexts */
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
-	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
+	TArray<TObjectPtr<UInputMappingContext>> MobileExcludedMappingContexts;
 
 	/** Mobile controls widget to spawn */
 	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")

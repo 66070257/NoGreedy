@@ -2,16 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
-#include "BTService_TryCatch.generated.h"
+#include "BTService_SelectLeader.generated.h"
 
 UCLASS()
-class NOGREEDY_API UBTService_TryCatch : public UBTService
+class NOGREEDY_API UBTService_SelectLeader : public UBTService
 {
 	GENERATED_BODY()
 
 public:
-	UBTService_TryCatch();
+	UBTService_SelectLeader();
 
 protected:
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector LeaderActorKey;
 };

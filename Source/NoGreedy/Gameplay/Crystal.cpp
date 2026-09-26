@@ -1,12 +1,9 @@
 #include "Crystal.h"
-#include "MyPlayerState.h"
+#include "NoGreedyPlayerState.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
 #include "GameFramework/Character.h"
-#include "Engine/StaticMesh.h"
-#include "Materials/MaterialInterface.h"
-#include "UObject/ConstructorHelpers.h"
 
 ACrystal::ACrystal()
 {
@@ -20,18 +17,6 @@ ACrystal::ACrystal()
 	Mesh->SetupAttachment(Root);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Mesh->SetRelativeScale3D(FVector(0.4f));
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaceholderMeshAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (PlaceholderMeshAsset.Succeeded())
-	{
-		Mesh->SetStaticMesh(PlaceholderMeshAsset.Object);
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> PlaceholderMaterialAsset(TEXT("/Game/Variant_Combat/Materials/M_Lava.M_Lava"));
-	if (PlaceholderMaterialAsset.Succeeded())
-	{
-		Mesh->SetMaterial(0, PlaceholderMaterialAsset.Object);
-	}
 
 	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
 	CollectionSphere->SetupAttachment(Root);
@@ -48,12 +33,7 @@ ACrystal::ACrystal()
 	OnActorBeginOverlap.AddDynamic(this, &ACrystal::OnBeginOverlap);
 }
 
-void ACrystal::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void ACrystal::SetDroppedBy(AMyPlayerState* Player, float LockoutSeconds)
+void ACrystal::SetDroppedBy(ANoGreedyPlayerState* Player, float LockoutSeconds)
 {
 	if (!HasAuthority())
 	{
@@ -77,7 +57,7 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		return;
 	}
 
-	AMyPlayerState* PS = OverlappedCharacter->GetPlayerState<AMyPlayerState>();
+	ANoGreedyPlayerState* PS = OverlappedCharacter->GetPlayerState<ANoGreedyPlayerState>();
 	if (!PS)
 	{
 		return;
@@ -88,7 +68,10 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		return;
 	}
 
-	PS->AddCrystals(1);
+	if (!PS->AddCrystals(1))
+	{
+		return;
+	}
 
 	CollectionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 

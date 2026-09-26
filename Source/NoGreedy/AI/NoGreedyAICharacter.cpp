@@ -1,11 +1,12 @@
-#include "MyAICharacter.h"
+#include "NoGreedyAICharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "Gameplay/NoGreedyGameState.h"
 #include "NoGreedyGameMode.h"
+#include "NoGreedy.h"
 
-AMyAICharacter::AMyAICharacter()
+ANoGreedyAICharacter::ANoGreedyAICharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -25,12 +26,12 @@ AMyAICharacter::AMyAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-void AMyAICharacter::SetChasing(bool bChasing)
+void ANoGreedyAICharacter::SetChasing(bool bChasing)
 {
 	GetCharacterMovement()->MaxWalkSpeed = bChasing ? ChaseSpeed : PatrolSpeed;
 }
 
-bool AMyAICharacter::MeleeAttack()
+bool ANoGreedyAICharacter::MeleeAttack()
 {
 	if (!HasAuthority())
 	{
@@ -43,15 +44,20 @@ bool AMyAICharacter::MeleeAttack()
 		return false;
 	}
 
-	AGameStateBase* GS = GetWorld()->GetGameState();
-	if (GS == nullptr)
+	ANoGreedyGameState* GS = GetWorld()->GetGameState<ANoGreedyGameState>();
+	ANoGreedyGameMode* GM = GetWorld()->GetAuthGameMode<ANoGreedyGameMode>();
+	if (GS == nullptr || GM == nullptr)
+	{
+		return false;
+	}
+
+	// AI only hunts during the round while someone holds the lead, regardless of where the BT calls this from
+	if (GS->IsRoundOver() || !IsValid(GS->GetCurrentLeader()))
 	{
 		return false;
 	}
 
 	const FVector Origin = GetActorLocation();
-	const FVector Forward = GetActorForwardVector();
-	const float CosThresh = FMath::Cos(FMath::DegreesToRadians(MeleeHalfAngle));
 
 	TArray<APawn*> Hits;
 	for (APlayerState* PS : GS->PlayerArray)
@@ -62,14 +68,7 @@ bool AMyAICharacter::MeleeAttack()
 			continue;
 		}
 
-		const FVector To = T->GetActorLocation() - Origin;
-
-		if (To.Size() > MeleeRange)
-		{
-			continue;
-		}
-
-		if (FVector::DotProduct(Forward, To.GetSafeNormal()) < CosThresh)
+		if (FVector::Dist(T->GetActorLocation(), Origin) > MeleeRange)
 		{
 			continue;
 		}
@@ -97,19 +96,15 @@ bool AMyAICharacter::MeleeAttack()
 
 	for (APawn* T : Hits)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CATCH: %s hit %s"), *GetName(), *T->GetName());
-
-		if (ANoGreedyGameMode* GM = GetWorld()->GetAuthGameMode<ANoGreedyGameMode>())
-		{
-			GM->EliminatePlayer(T->GetController(), GetController());
-		}
+		UE_LOG(LogNoGreedy, Warning, TEXT("CATCH: %s hit %s"), *GetName(), *T->GetName());
+		GM->EliminatePlayer(T->GetController(), GetController());
 	}
 
 	MulticastPlayAttack();
 	return true;
 }
 
-void AMyAICharacter::MulticastPlayAttack_Implementation()
+void ANoGreedyAICharacter::MulticastPlayAttack_Implementation()
 {
 	if (AttackMontage)
 	{

@@ -1,10 +1,10 @@
-#include "BTSelectLeader.h"
-#include "Gameplay/MyGameState.h"
-#include "Gameplay/MyPlayerState.h"
+#include "BTService_SelectLeader.h"
+#include "Gameplay/NoGreedyGameState.h"
+#include "Gameplay/NoGreedyPlayerState.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Pawn.h"
 
-UBTSelectLeader::UBTSelectLeader()
+UBTService_SelectLeader::UBTService_SelectLeader()
 {
 	NodeName = TEXT("Select Leader");
 
@@ -13,10 +13,10 @@ UBTSelectLeader::UBTSelectLeader()
 
 	bNotifyTick = true;
 
-	LeaderActorKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTSelectLeader, LeaderActorKey), AActor::StaticClass());
+	LeaderActorKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTService_SelectLeader, LeaderActorKey), AActor::StaticClass());
 }
 
-void UBTSelectLeader::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+void UBTService_SelectLeader::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
@@ -26,14 +26,14 @@ void UBTSelectLeader::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMem
 		return;
 	}
 
-	AMyGameState* GS = GetWorld()->GetGameState<AMyGameState>();
+	ANoGreedyGameState* GS = GetWorld()->GetGameState<ANoGreedyGameState>();
 	if (GS == nullptr)
 	{
 		BB->ClearValue(LeaderActorKey.SelectedKeyName);
 		return;
 	}
 
-	AMyPlayerState* Leader = GS->CurrentLeader;
+	ANoGreedyPlayerState* Leader = GS->GetCurrentLeader();
 	if (!IsValid(Leader))
 	{
 		BB->ClearValue(LeaderActorKey.SelectedKeyName);

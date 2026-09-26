@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "NoGreedy.h"
+#include "NoGreedyGameMode.h"
 
 ANoGreedyCharacter::ANoGreedyCharacter()
 {
@@ -53,6 +54,23 @@ void ANoGreedyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	else
 	{
 		UE_LOG(LogNoGreedy, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ANoGreedyCharacter::FellOutOfWorld(const UDamageType& DmgType)
+{
+	if (HasAuthority())
+	{
+		if (ANoGreedyGameMode* GM = GetWorld()->GetAuthGameMode<ANoGreedyGameMode>())
+		{
+			GM->EliminatePlayer(GetController(), nullptr, false);
+		}
+	}
+
+	// EliminatePlayer destroys the pawn; otherwise (e.g. round already over) fall back to the default cleanup
+	if (!IsActorBeingDestroyed())
+	{
+		Super::FellOutOfWorld(DmgType);
 	}
 }
 

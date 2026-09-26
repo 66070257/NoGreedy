@@ -2,15 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MyAICharacter.generated.h"
+#include "NoGreedyAICharacter.generated.h"
+
+class UAnimMontage;
 
 UCLASS()
-class NOGREEDY_API AMyAICharacter : public ACharacter
+class NOGREEDY_API ANoGreedyAICharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AMyAICharacter();
+	ANoGreedyAICharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Movement")
 	float PatrolSpeed = 250.f;
@@ -25,13 +27,10 @@ public:
 	float MeleeRange = 150.f;
 
 	UPROPERTY(EditAnywhere, Category = "AI|Melee")
-	float MeleeHalfAngle = 180.f;
-
-	UPROPERTY(EditAnywhere, Category = "AI|Melee")
 	float MinAttackInterval = 1.5f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Melee")
-	class UAnimMontage* AttackMontage;
+	TObjectPtr<UAnimMontage> AttackMontage;
 
 	bool MeleeAttack();
 
