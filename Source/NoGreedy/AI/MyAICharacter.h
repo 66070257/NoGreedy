@@ -1,5 +1,3 @@
-// No Greedy! game project
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -38,8 +36,6 @@ public:
 	/** Behavior Tree เรียกตอนสลับกิ่ง ไล่ <-> เดินวน */
 	UFUNCTION(BlueprintCallable, Category = "AI|Movement")
 	void SetChasing(bool bChasing);
-
-	//~ ตีจับ -- ระยะ/กรวยแบบ Lab แต่โดนแล้วสั่ง GameMode->EliminatePlayer ตรง ๆ (ตีทีเดียวตาย)
 
 	/**
 	 * ระยะตี (จุดกลางถึงจุดกลาง) -- ต้องเท่ากับ SightRadius ใน AMyAIController

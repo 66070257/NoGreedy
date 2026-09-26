@@ -1,5 +1,3 @@
-// No Greedy! game project
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -81,16 +79,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Timer")
 	FOnRoundTimeUp OnRoundTimeUp;
 
-	//~ คนนำ -- กฎ "คนนำโดนล่า" ในวอลต์
-
 	/**
 	 * ผู้เล่นที่ถือคริสตอลมากที่สุดตอนนี้ -- AI ไล่คนนี้
 	 * null = ยังไม่มีใครนำ (ทุกคนถือ 0 ชิ้น) -> AI ยืนนิ่ง
 	 */
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentLeader, VisibleInstanceOnly, BlueprintReadOnly, Category = "Leader")
 	AMyPlayerState* CurrentLeader = nullptr;
-
-	//~ ผู้ชนะ -- GDD: รอดคนเดียวชนะทันที · หมดเวลา = ถือมากสุดชนะ · เสมอ = ไม่มีผู้ชนะ
 
 	/** ผู้ชนะของรอบ null = ยังไม่จบ (หรือเสมอ) -- server ตั้ง, replicate ให้ HUD อ่าน */
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Winner")

@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -49,6 +47,4 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float ScatterRadius = 300.f;
 };
-
-
 

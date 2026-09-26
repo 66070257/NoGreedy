@@ -1,5 +1,3 @@
-// No Greedy! game project
-
 #pragma once
 
 #include "CoreMinimal.h"

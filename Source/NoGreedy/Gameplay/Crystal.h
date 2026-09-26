@@ -1,5 +1,3 @@
-// No Greedy! game project
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -58,7 +56,6 @@ protected:
 
 private:
 
-	// server-only bookkeeping for the drop-lockout rule -- never replicated
 	TWeakObjectPtr<AMyPlayerState> DroppedByPlayer;
 	float RecollectAvailableTime = 0.0f;
 };
