@@ -150,7 +150,8 @@ void ANoGreedyGameState::RecalculateLeader()
 		}
 	}
 
-	if (Best != nullptr && Best->GetCrystalCount() <= 0)
+	// Nobody holds anything: keep chasing the last leader if they are still in. Only pick no one when there was no leader to keep
+	if (bLeaderGone && Best != nullptr && Best->GetCrystalCount() <= 0)
 	{
 		Best = nullptr;
 	}
