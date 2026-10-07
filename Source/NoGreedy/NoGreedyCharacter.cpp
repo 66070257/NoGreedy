@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "NoGreedy.h"
 #include "NoGreedyGameMode.h"
+#include "Gameplay/NoGreedyPlayerState.h"
 
 ANoGreedyCharacter::ANoGreedyCharacter()
 {
@@ -24,7 +25,7 @@ ANoGreedyCharacter::ANoGreedyCharacter()
 
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -77,6 +78,31 @@ void ANoGreedyCharacter::FellOutOfWorld(const UDamageType& DmgType)
 	{
 		Super::FellOutOfWorld(DmgType);
 	}
+}
+
+void ANoGreedyCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	UpdateSpeedFromPlayerState();
+}
+
+void ANoGreedyCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	UpdateSpeedFromPlayerState();
+}
+
+void ANoGreedyCharacter::UpdateSpeedFromPlayerState()
+{
+	const ANoGreedyPlayerState* PS = GetPlayerState<ANoGreedyPlayerState>();
+	UpdateSpeedFromCrystals(PS ? PS->GetCrystalCount() : 0);
+}
+
+void ANoGreedyCharacter::UpdateSpeedFromCrystals(int32 CrystalCount)
+{
+	GetCharacterMovement()->MaxWalkSpeed = FMath::Max(BaseSpeed - SpeedLossPerCrystal * CrystalCount, MinSpeed);
 }
 
 void ANoGreedyCharacter::Move(const FInputActionValue& Value)

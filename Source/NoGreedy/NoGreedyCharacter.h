@@ -53,6 +53,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Greed")
 	float DropCooldown = 0.3f;
 
+	/** Walk speed while holding no crystals */
+	UPROPERTY(EditAnywhere, Category="Greed")
+	float BaseSpeed = 600.f;
+
+	/** Walk speed lost for every crystal held */
+	UPROPERTY(EditAnywhere, Category="Greed")
+	float SpeedLossPerCrystal = 20.f;
+
+	/** Walk speed never drops below this, however many crystals are held */
+	UPROPERTY(EditAnywhere, Category="Greed")
+	float MinSpeed = 300.f;
+
 public:
 
 	/** Constructor */
@@ -65,6 +77,21 @@ protected:
 
 	/** Falling below the world's Kill Z counts as an elimination, same as a fall death volume */
 	virtual void FellOutOfWorld(const class UDamageType& DmgType) override;
+
+	/** Server: apply the speed for the crystals this player already holds */
+	virtual void PossessedBy(AController* NewController) override;
+
+	/** Client: same as PossessedBy, once the PlayerState has replicated */
+	virtual void OnRep_PlayerState() override;
+
+public:
+
+	/** Sets MaxWalkSpeed from the crystal count. Runs on server and clients so movement prediction agrees */
+	void UpdateSpeedFromCrystals(int32 CrystalCount);
+
+private:
+
+	void UpdateSpeedFromPlayerState();
 
 protected:
 

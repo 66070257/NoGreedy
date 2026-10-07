@@ -1,5 +1,6 @@
 #include "NoGreedyPlayerState.h"
 #include "NoGreedyGameState.h"
+#include "NoGreedyCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 bool ANoGreedyPlayerState::AddCrystals(int32 Amount)
@@ -45,6 +46,12 @@ int32 ANoGreedyPlayerState::Eliminate()
 
 void ANoGreedyPlayerState::OnRep_CrystalCount()
 {
+	// Called on the server by AddCrystals and on clients by replication, so both sides set the same speed
+	if (ANoGreedyCharacter* Character = GetPawn<ANoGreedyCharacter>())
+	{
+		Character->UpdateSpeedFromCrystals(CrystalCount);
+	}
+
 	BP_OnCrystalCountChanged(CrystalCount);
 }
 
