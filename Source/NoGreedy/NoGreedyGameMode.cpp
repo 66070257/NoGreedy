@@ -109,3 +109,37 @@ void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer
 		GS->CheckLastSurvivor();
 	}
 }
+
+bool ANoGreedyGameMode::DropCrystal(AController* Dropper)
+{
+	if (Dropper == nullptr || CrystalClass == nullptr)
+	{
+		return false;
+	}
+
+	APawn* Pawn = Dropper->GetPawn();
+	ANoGreedyPlayerState* PS = Dropper->GetPlayerState<ANoGreedyPlayerState>();
+	if (Pawn == nullptr || PS == nullptr || PS->IsEliminated() || PS->GetCrystalCount() <= 0)
+	{
+		return false;
+	}
+
+	// AddCrystals also rejects the change once the round is over
+	if (!PS->AddCrystals(-1))
+	{
+		return false;
+	}
+
+	const FVector SpawnLocation = Pawn->GetActorLocation() - Pawn->GetActorForwardVector() * DropDistance;
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	if (ACrystal* Crystal = GetWorld()->SpawnActor<ACrystal>(CrystalClass, SpawnLocation, FRotator::ZeroRotator, Params))
+	{
+		Crystal->SetDroppedBy(PS, DropRecollectLockout);
+	}
+
+	UE_LOG(LogNoGreedy, Log, TEXT("DROP: %s now holds %d crystals"), *PS->GetPlayerName(), PS->GetCrystalCount());
+
+	return true;
+}

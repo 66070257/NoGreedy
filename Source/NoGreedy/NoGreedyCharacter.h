@@ -45,6 +45,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> MouseLookAction;
 
+	/** Drop Crystal Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> DropAction;
+
+	/** Minimum seconds between two drops */
+	UPROPERTY(EditAnywhere, Category="Greed")
+	float DropCooldown = 0.3f;
+
 public:
 
 	/** Constructor */
@@ -83,6 +91,21 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	/** Handles drop crystal inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoDropCrystal();
+
+protected:
+
+	/** Asks the server to drop one crystal behind this character */
+	UFUNCTION(Server, Reliable)
+	void ServerDropCrystal();
+
+private:
+
+	/** Server only. World time of the last accepted drop */
+	float LastDropTime = -1000.f;
 
 public:
 

@@ -50,6 +50,11 @@ void ANoGreedyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ANoGreedyCharacter::Look);
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANoGreedyCharacter::Look);
+
+		if (DropAction)
+		{
+			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &ANoGreedyCharacter::DoDropCrystal);
+		}
 	}
 	else
 	{
@@ -121,4 +126,24 @@ void ANoGreedyCharacter::DoJumpStart()
 void ANoGreedyCharacter::DoJumpEnd()
 {
 	StopJumping();
+}
+
+void ANoGreedyCharacter::DoDropCrystal()
+{
+	ServerDropCrystal();
+}
+
+void ANoGreedyCharacter::ServerDropCrystal_Implementation()
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastDropTime < DropCooldown)
+	{
+		return;
+	}
+
+	ANoGreedyGameMode* GM = GetWorld()->GetAuthGameMode<ANoGreedyGameMode>();
+	if (GM && GM->DropCrystal(GetController()))
+	{
+		LastDropTime = Now;
+	}
 }

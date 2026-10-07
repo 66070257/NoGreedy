@@ -20,6 +20,9 @@ public:
 	/** Server only. bDropCrystals = false means the victim's crystals are lost (e.g. fell into a pit) */
 	void EliminatePlayer(AController* Victim, AController* Killer, bool bDropCrystals = true);
 
+	/** Server only. Takes one crystal from the player and spawns it behind their pawn. Returns false if nothing was dropped */
+	bool DropCrystal(AController* Dropper);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -40,6 +43,14 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float ScatterRadius = 300.f;
+
+	/** How far behind the player a dropped crystal lands */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	float DropDistance = 150.f;
+
+	/** Seconds before the dropper can pick their own crystal back up */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	float DropRecollectLockout = 1.5f;
 
 private:
 	FTimerHandle RestartTimerHandle;
