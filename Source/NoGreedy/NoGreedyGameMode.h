@@ -17,6 +17,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Rules")
 	void TravelToGame();
 
+	UFUNCTION(BlueprintCallable, Category="Rules")
+	void TravelToLobby();
+
 	/** Server only. bDropCrystals = false means the victim's crystals are lost (e.g. fell into a pit) */
 	void EliminatePlayer(AController* Victim, AController* Killer, bool bDropCrystals = true);
 
@@ -31,7 +34,7 @@ protected:
 	UFUNCTION()
 	void HandleRoundOver(class ANoGreedyPlayerState* RoundWinner);
 
-	/** Seconds after the round ends before restarting the Game map; 0 or less disables it */
+	/** Seconds after the round ends before travelling: back to the Lobby on a win, or restarting the Game map on a draw. 0 or less disables it */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float RestartDelay = 5.f;
 

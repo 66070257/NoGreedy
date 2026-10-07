@@ -24,12 +24,25 @@ void ANoGreedyGameMode::HandleRoundOver(ANoGreedyPlayerState* RoundWinner)
 		return;
 	}
 
-	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToGame, RestartDelay, false);
+	// A draw replays the round; otherwise the game is over and everyone goes back to the Lobby
+	if (RoundWinner)
+	{
+		GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToLobby, RestartDelay, false);
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToGame, RestartDelay, false);
+	}
 }
 
 void ANoGreedyGameMode::TravelToGame()
 {
 	GetWorld()->ServerTravel(TEXT("/Game/Maps/Game?listen"));
+}
+
+void ANoGreedyGameMode::TravelToLobby()
+{
+	GetWorld()->ServerTravel(TEXT("/Game/Maps/Lobby?listen"));
 }
 
 AActor* ANoGreedyGameMode::ChoosePlayerStart_Implementation(AController* Player)
