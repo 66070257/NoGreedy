@@ -17,6 +17,17 @@ void ANoGreedyGameMode::BeginPlay()
 	}
 }
 
+void ANoGreedyGameMode::InitGameState()
+{
+	Super::InitGameState();
+
+	// Runs before the GameState's BeginPlay, which is where the round timer starts
+	if (ANoGreedyGameState* GS = GetGameState<ANoGreedyGameState>())
+	{
+		GS->bAutoStartRound = bStartRound;
+	}
+}
+
 void ANoGreedyGameMode::HandleRoundOver(ANoGreedyPlayerState* RoundWinner)
 {
 	if (RestartDelay <= 0.f)
@@ -24,15 +35,7 @@ void ANoGreedyGameMode::HandleRoundOver(ANoGreedyPlayerState* RoundWinner)
 		return;
 	}
 
-	// A draw replays the round; otherwise the game is over and everyone goes back to the Lobby
-	if (RoundWinner)
-	{
-		GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToLobby, RestartDelay, false);
-	}
-	else
-	{
-		GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToGame, RestartDelay, false);
-	}
+	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &ANoGreedyGameMode::TravelToLobby, RestartDelay, false);
 }
 
 void ANoGreedyGameMode::TravelToGame()

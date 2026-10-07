@@ -29,12 +29,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void InitGameState() override;
+
+	/** False for maps that are not a round, such as the Lobby: the round timer never starts */
+	UPROPERTY(EditDefaultsOnly, Category="Rules")
+	bool bStartRound = true;
+
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 	UFUNCTION()
 	void HandleRoundOver(class ANoGreedyPlayerState* RoundWinner);
 
-	/** Seconds after the round ends before travelling: back to the Lobby on a win, or restarting the Game map on a draw. 0 or less disables it */
+	/** Seconds after the round ends (win or draw) before everyone travels back to the Lobby; 0 or less disables it */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float RestartDelay = 5.f;
 
