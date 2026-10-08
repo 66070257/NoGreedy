@@ -5,6 +5,7 @@ DerivedDataCache/
 Intermediate/
 Saved/
 Build/
+Windows/
 Platforms/*/Binaries/
 Platforms/*/Build/
 Platforms/*/Intermediate/
