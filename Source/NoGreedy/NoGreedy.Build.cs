@@ -15,8 +15,7 @@ public class NoGreedy : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
-			"StateTreeModule",
-			"GameplayStateTreeModule",
+			"Niagara",
 			"UMG",
 			"Slate"
 		});
@@ -24,20 +23,7 @@ public class NoGreedy : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
-			"NoGreedy",
-			"NoGreedy/Variant_Platforming",
-			"NoGreedy/Variant_Platforming/Animation",
-			"NoGreedy/Variant_Combat",
-			"NoGreedy/Variant_Combat/AI",
-			"NoGreedy/Variant_Combat/Animation",
-			"NoGreedy/Variant_Combat/Gameplay",
-			"NoGreedy/Variant_Combat/Interfaces",
-			"NoGreedy/Variant_Combat/UI",
-			"NoGreedy/Variant_SideScrolling",
-			"NoGreedy/Variant_SideScrolling/AI",
-			"NoGreedy/Variant_SideScrolling/Gameplay",
-			"NoGreedy/Variant_SideScrolling/Interfaces",
-			"NoGreedy/Variant_SideScrolling/UI"
+			"NoGreedy"
 		});
 
 		// Uncomment if you are using Slate UI

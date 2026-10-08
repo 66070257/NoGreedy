@@ -1,7 +1,6 @@
 ﻿#include "NoGreedyGameState.h"
 #include "NoGreedyPlayerState.h"
 #include "Net/UnrealNetwork.h"
-#include "NoGreedy.h"
 #include "TimerManager.h"
 
 void ANoGreedyGameState::BeginPlay()
@@ -47,16 +46,7 @@ void ANoGreedyGameState::OnRoundTimerExpired()
 	FrozenRemainingTime = 0.f;
 	bTimerRunning = false;
 
-	OnRoundTimeUp.Broadcast();
 	DecideWinnerByCrystals();
-}
-
-void ANoGreedyGameState::OnRep_TimerRunning()
-{
-	if (!bTimerRunning && FrozenRemainingTime == 0.f)
-	{
-		OnRoundTimeUp.Broadcast();
-	}
 }
 
 void ANoGreedyGameState::OnRep_RoundOver()
@@ -82,17 +72,10 @@ int32 ANoGreedyGameState::GetRemainingSeconds() const
 	return FMath::CeilToInt(GetRemainingTime());
 }
 
-FString ANoGreedyGameState::GetRemainingTimeAsString() const
-{
-	const int32 TotalSeconds = GetRemainingSeconds();
-	const int32 Minutes = TotalSeconds / 60;
-	const int32 Seconds = TotalSeconds % 60;
-	return FString::Printf(TEXT("%d:%02d"), Minutes, Seconds);
-}
-
 FText ANoGreedyGameState::GetRemainingTimeAsText() const
 {
-	return FText::FromString(GetRemainingTimeAsString());
+	const int32 TotalSeconds = GetRemainingSeconds();
+	return FText::FromString(FString::Printf(TEXT("%d:%02d"), TotalSeconds / 60, TotalSeconds % 60));
 }
 
 FText ANoGreedyGameState::GetScoreboardText(const APlayerState* LocalPlayer) const
@@ -171,13 +154,6 @@ void ANoGreedyGameState::RecalculateLeader()
 
 	CurrentLeader = Best;
 	LeaderLockUntil = Now + LeaderLockDuration;
-
-	OnRep_CurrentLeader();
-}
-
-void ANoGreedyGameState::OnRep_CurrentLeader()
-{
-	OnLeaderChanged.Broadcast(CurrentLeader);
 }
 
 void ANoGreedyGameState::SetWinner(ANoGreedyPlayerState* NewWinner)
@@ -203,15 +179,6 @@ void ANoGreedyGameState::EndRound(ANoGreedyPlayerState* NewWinner)
 	bRoundOver = true;
 
 	OnRep_RoundOver();
-
-	if (Winner)
-	{
-		UE_LOG(LogNoGreedy, Warning, TEXT("WINNER: %s"), *Winner->GetPlayerName());
-	}
-	else
-	{
-		UE_LOG(LogNoGreedy, Warning, TEXT("DRAW"));
-	}
 }
 
 void ANoGreedyGameState::CheckLastSurvivor()

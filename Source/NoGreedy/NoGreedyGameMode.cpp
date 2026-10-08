@@ -2,10 +2,10 @@
 #include "Gameplay/NoGreedyGameState.h"
 #include "Gameplay/NoGreedyPlayerState.h"
 #include "Gameplay/Crystal.h"
+#include "NoGreedyCharacter.h"
 #include "EngineUtils.h"
 #include "Engine/TargetPoint.h"
 #include "TimerManager.h"
-#include "NoGreedy.h"
 
 void ANoGreedyGameMode::BeginPlay()
 {
@@ -97,9 +97,6 @@ void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer
 
 	const int32 Count = PS->Eliminate();
 
-	UE_LOG(LogNoGreedy, Warning, TEXT("ELIMINATED: %s (caught by %s) %s %d crystals"),
-		*PS->GetPlayerName(), *GetNameSafe(Killer), bDropCrystals ? TEXT("dropping") : TEXT("losing"), Count);
-
 	APawn* DeadPawn = Victim->GetPawn();
 	if (bDropCrystals && DeadPawn && CrystalClass)
 	{
@@ -153,9 +150,12 @@ bool ANoGreedyGameMode::DropCrystal(AController* Dropper)
 	if (ACrystal* Crystal = GetWorld()->SpawnActor<ACrystal>(CrystalClass, SpawnLocation, FRotator::ZeroRotator, Params))
 	{
 		Crystal->SetDroppedBy(PS, DropRecollectLockout);
-	}
 
-	UE_LOG(LogNoGreedy, Log, TEXT("DROP: %s now holds %d crystals"), *PS->GetPlayerName(), PS->GetCrystalCount());
+		if (ANoGreedyCharacter* Character = Cast<ANoGreedyCharacter>(Pawn))
+		{
+			Character->MulticastPlayCrystalFX(Crystal->GetActorLocation(), false);
+		}
+	}
 
 	return true;
 }

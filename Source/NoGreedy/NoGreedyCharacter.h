@@ -2,12 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Logging/LogMacros.h"
 #include "NoGreedyCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UNiagaraSystem;
+class USoundBase;
 struct FInputActionValue;
 
 /**
@@ -64,6 +65,20 @@ protected:
 	/** Walk speed never drops below this, however many crystals are held */
 	UPROPERTY(EditAnywhere, Category="Greed")
 	float MinSpeed = 300.f;
+
+	/** Spawned where this character picks up a crystal */
+	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
+	TObjectPtr<UNiagaraSystem> CollectEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
+	TObjectPtr<USoundBase> CollectSound;
+
+	/** Spawned where a dropped crystal lands */
+	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
+	TObjectPtr<UNiagaraSystem> DropEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
+	TObjectPtr<USoundBase> DropSound;
 
 public:
 
@@ -128,6 +143,12 @@ protected:
 	/** Asks the server to drop one crystal behind this character */
 	UFUNCTION(Server, Reliable)
 	void ServerDropCrystal();
+
+public:
+
+	/** Server only. Every machine spawns its own collect or drop effect at Location */
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayCrystalFX(FVector_NetQuantize Location, bool bCollected);
 
 private:
 

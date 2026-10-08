@@ -51,8 +51,6 @@ void ANoGreedyPlayerState::OnRep_CrystalCount()
 	{
 		Character->UpdateSpeedFromCrystals(CrystalCount);
 	}
-
-	BP_OnCrystalCountChanged(CrystalCount);
 }
 
 void ANoGreedyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

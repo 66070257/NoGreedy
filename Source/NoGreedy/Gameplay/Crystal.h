@@ -29,20 +29,13 @@ class NOGREEDY_API ACrystal : public AActor
 public:
 	ACrystal();
 
-	/**
-	 *  UNUSED: nothing calls this yet (C++ or Blueprint).
-	 *  Kept for a future "drop crystals" feature: stops the dropping player
-	 *  from re-collecting this crystal for LockoutSeconds.
-	 */
+	/** Stops the dropping player from re-collecting this crystal for LockoutSeconds */
 	UFUNCTION(BlueprintCallable, Category = "Greed")
 	void SetDroppedBy(ANoGreedyPlayerState* Player, float LockoutSeconds = 1.5f);
 
 protected:
 	UFUNCTION()
 	void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "Greed", meta = (DisplayName = "On Collected"))
-	void BP_OnCollected();
 
 private:
 	TWeakObjectPtr<ANoGreedyPlayerState> DroppedByPlayer;

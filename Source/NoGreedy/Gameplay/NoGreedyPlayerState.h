@@ -30,8 +30,5 @@ protected:
 	UFUNCTION()
 	void OnRep_CrystalCount();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Greed", meta = (DisplayName = "On Crystal Count Changed"))
-	void BP_OnCrystalCountChanged(int32 NewCount);
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -8,7 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "NoGreedy.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 #include "NoGreedyGameMode.h"
 #include "Gameplay/NoGreedyPlayerState.h"
 
@@ -42,8 +43,8 @@ ANoGreedyCharacter::ANoGreedyCharacter()
 
 void ANoGreedyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
@@ -56,10 +57,6 @@ void ANoGreedyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		{
 			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &ANoGreedyCharacter::DoDropCrystal);
 		}
-	}
-	else
-	{
-		UE_LOG(LogNoGreedy, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
 
@@ -171,5 +168,21 @@ void ANoGreedyCharacter::ServerDropCrystal_Implementation()
 	if (GM && GM->DropCrystal(GetController()))
 	{
 		LastDropTime = Now;
+	}
+}
+
+void ANoGreedyCharacter::MulticastPlayCrystalFX_Implementation(FVector_NetQuantize Location, bool bCollected)
+{
+	UNiagaraSystem* Effect = bCollected ? CollectEffect : DropEffect;
+	USoundBase* Sound = bCollected ? CollectSound : DropSound;
+
+	if (Effect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, Effect, Location);
+	}
+
+	if (Sound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
 	}
 }

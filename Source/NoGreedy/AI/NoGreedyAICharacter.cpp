@@ -2,9 +2,10 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Gameplay/NoGreedyGameState.h"
 #include "NoGreedyGameMode.h"
-#include "NoGreedy.h"
 
 ANoGreedyAICharacter::ANoGreedyAICharacter()
 {
@@ -24,11 +25,6 @@ ANoGreedyAICharacter::ANoGreedyAICharacter()
 	GetCharacterMovement()->GetNavMovementProperties()->bUseAccelerationForPaths = true;
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-}
-
-void ANoGreedyAICharacter::SetChasing(bool bChasing)
-{
-	GetCharacterMovement()->MaxWalkSpeed = bChasing ? ChaseSpeed : PatrolSpeed;
 }
 
 bool ANoGreedyAICharacter::MeleeAttack()
@@ -91,23 +87,34 @@ bool ANoGreedyAICharacter::MeleeAttack()
 			Nearest = T;
 		}
 	}
-	const FVector ToNearest = Nearest->GetActorLocation() - Origin;
+	const FVector HitLocation = Nearest->GetActorLocation();
+	const FVector ToNearest = HitLocation - Origin;
 	SetActorRotation(FRotator(0.f, ToNearest.Rotation().Yaw, 0.f));
 
+	// Location is read before EliminatePlayer destroys the pawns
 	for (APawn* T : Hits)
 	{
-		UE_LOG(LogNoGreedy, Warning, TEXT("CATCH: %s hit %s"), *GetName(), *T->GetName());
 		GM->EliminatePlayer(T->GetController(), GetController());
 	}
 
-	MulticastPlayAttack();
+	MulticastPlayAttack(HitLocation);
 	return true;
 }
 
-void ANoGreedyAICharacter::MulticastPlayAttack_Implementation()
+void ANoGreedyAICharacter::MulticastPlayAttack_Implementation(FVector_NetQuantize HitLocation)
 {
 	if (AttackMontage)
 	{
 		PlayAnimMontage(AttackMontage);
+	}
+
+	if (HitEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, HitEffect, HitLocation);
+	}
+
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitLocation);
 	}
 }

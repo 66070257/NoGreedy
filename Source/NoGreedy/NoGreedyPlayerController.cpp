@@ -3,7 +3,6 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
-#include "NoGreedy.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 void ANoGreedyPlayerController::BeginPlay()
@@ -17,8 +16,6 @@ void ANoGreedyPlayerController::BeginPlay()
 		if (MobileControlsWidget)
 		{
 			MobileControlsWidget->AddToPlayerScreen(0);
-		} else {
-			UE_LOG(LogNoGreedy, Error, TEXT("Could not spawn mobile controls widget."));
 		}
 	}
 }

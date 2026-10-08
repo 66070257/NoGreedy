@@ -4,6 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
 #include "GameFramework/Character.h"
+#include "NoGreedyCharacter.h"
 
 ACrystal::ACrystal()
 {
@@ -75,7 +76,11 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 
 	CollectionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	BP_OnCollected();
+	// The crystal is destroyed below, so the multicast goes through the collector, who stays around
+	if (ANoGreedyCharacter* Collector = Cast<ANoGreedyCharacter>(OverlappedCharacter))
+	{
+		Collector->MulticastPlayCrystalFX(GetActorLocation(), true);
+	}
 
 	Destroy();
 }

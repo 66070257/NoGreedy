@@ -10,10 +10,10 @@ class NOGREEDY_API ANoGreedyGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(ReplicatedUsing = OnRep_TimerRunning, VisibleInstanceOnly, BlueprintReadOnly, Category = "Timer", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Timer", meta = (AllowPrivateAccess = "true"))
 	bool bTimerRunning = false;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentLeader, VisibleInstanceOnly, BlueprintReadOnly, Category = "Leader", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Leader", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<ANoGreedyPlayerState> CurrentLeader = nullptr;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Winner", meta = (AllowPrivateAccess = "true"))
@@ -30,11 +30,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Timer")
 	bool bAutoStartRound = true;
 
-	bool IsTimerRunning() const { return bTimerRunning; }
-
 	ANoGreedyPlayerState* GetCurrentLeader() const { return CurrentLeader; }
-
-	ANoGreedyPlayerState* GetWinner() const { return Winner; }
 
 	bool IsRoundOver() const { return bRoundOver; }
 
@@ -52,17 +48,10 @@ public:
 	int32 GetRemainingSeconds() const;
 
 	UFUNCTION(BlueprintPure, Category = "Timer")
-	FString GetRemainingTimeAsString() const;
-
-	UFUNCTION(BlueprintPure, Category = "Timer")
 	FText GetRemainingTimeAsText() const;
 
 	UFUNCTION(BlueprintPure, Category = "Score")
 	FText GetScoreboardText(const APlayerState* LocalPlayer) const;
-
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRoundTimeUp);
-	UPROPERTY(BlueprintAssignable, Category = "Timer")
-	FOnRoundTimeUp OnRoundTimeUp;
 
 	/** Fires on every machine when the round ends; RoundWinner is null on a draw */
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundOver, ANoGreedyPlayerState*, RoundWinner);
@@ -79,18 +68,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Leader")
 	void RecalculateLeader();
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLeaderChanged, ANoGreedyPlayerState*, NewLeader);
-	UPROPERTY(BlueprintAssignable, Category = "Leader")
-	FOnLeaderChanged OnLeaderChanged;
-
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void OnRep_CurrentLeader();
-
-	UFUNCTION()
-	void OnRep_TimerRunning();
 
 	UFUNCTION()
 	void OnRep_RoundOver();
