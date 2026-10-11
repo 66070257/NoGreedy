@@ -17,7 +17,8 @@ public class NoGreedy : ModuleRules
 			"AIModule",
 			"Niagara",
 			"UMG",
-			"Slate"
+			"Slate",
+			"CinematicCamera"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
