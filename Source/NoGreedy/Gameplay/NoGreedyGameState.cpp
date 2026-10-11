@@ -20,6 +20,7 @@ void ANoGreedyGameState::StartRound()
 		return;
 	}
 
+	// Replicate the end time once instead of the remaining time every frame; clients subtract the synced server clock
 	RoundEndTime = GetServerWorldTimeSeconds() + RoundDuration;
 	bTimerRunning = true;
 	bRoundOver = false;
@@ -64,6 +65,7 @@ float ANoGreedyGameState::GetRemainingTime() const
 		return FMath::Max(RoundEndTime - GetServerWorldTimeSeconds(), 0.f);
 	}
 
+	// Stopped: show where it stopped, or the full duration if the round never ran (e.g. the Lobby)
 	return FrozenRemainingTime >= 0.f ? FrozenRemainingTime : RoundDuration;
 }
 
@@ -111,6 +113,7 @@ void ANoGreedyGameState::RecalculateLeader()
 		return;
 	}
 
+	// Start from the current leader so a challenger must strictly beat them; a tie keeps the current leader
 	ANoGreedyPlayerState* Best = CurrentLeader;
 
 	const bool bLeaderGone = !IsValid(Best) || Best->IsEliminated();
@@ -144,6 +147,7 @@ void ANoGreedyGameState::RecalculateLeader()
 		return;
 	}
 
+	// A leader who is still alive keeps the lead until the lock expires; an eliminated leader is replaced immediately
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (!bLeaderGone && Best != nullptr && Now < LeaderLockUntil)
 	{
@@ -178,6 +182,7 @@ void ANoGreedyGameState::EndRound(ANoGreedyPlayerState* NewWinner)
 	Winner = NewWinner;
 	bRoundOver = true;
 
+	// RepNotify does not fire on the server, so broadcast OnRoundOver here manually
 	OnRep_RoundOver();
 }
 
@@ -225,6 +230,7 @@ void ANoGreedyGameState::DecideWinnerByCrystals()
 		}
 		else if (MPS->GetCrystalCount() == Best->GetCrystalCount())
 		{
+			// Only a tie for the top count matters; bTie resets whenever a new best is found
 			bTie = true;
 		}
 	}

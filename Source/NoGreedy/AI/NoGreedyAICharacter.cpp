@@ -22,8 +22,10 @@ ANoGreedyAICharacter::ANoGreedyAICharacter()
 	GetCharacterMovement()->MaxWalkSpeed = PatrolSpeed;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
+	// Follow nav paths with acceleration so turns and stops look smooth instead of snapping
 	GetCharacterMovement()->GetNavMovementProperties()->bUseAccelerationForPaths = true;
 
+	// Works both when placed in the level and when spawned at runtime
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
@@ -55,6 +57,7 @@ bool ANoGreedyAICharacter::MeleeAttack()
 
 	const FVector Origin = GetActorLocation();
 
+	// Every player in range is hit, not only the leader being chased
 	TArray<APawn*> Hits;
 	for (APlayerState* PS : GS->PlayerArray)
 	{
@@ -79,6 +82,7 @@ bool ANoGreedyAICharacter::MeleeAttack()
 
 	LastAttackTime = Now;
 
+	// Face the nearest victim so the attack montage points at them; their location is also where the FX play
 	APawn* Nearest = Hits[0];
 	for (APawn* T : Hits)
 	{

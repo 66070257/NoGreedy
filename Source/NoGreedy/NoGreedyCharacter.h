@@ -12,8 +12,9 @@ class USoundBase;
 struct FInputActionValue;
 
 /**
- *  A simple player-controllable third person character
- *  Implements a controllable orbiting camera
+ *  Player-controlled third person character with an orbiting camera.
+ *  Collects crystals by touching them, gets slower the more it holds, and can drop one to speed back up.
+ *  Crystal count lives on ANoGreedyPlayerState; this class only reacts to it.
  */
 UCLASS(abstract)
 class NOGREEDY_API ANoGreedyCharacter : public ACharacter
@@ -70,6 +71,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
 	TObjectPtr<UNiagaraSystem> CollectEffect;
 
+	/** Played where this character picks up a crystal */
 	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
 	TObjectPtr<USoundBase> CollectSound;
 
@@ -77,6 +79,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
 	TObjectPtr<UNiagaraSystem> DropEffect;
 
+	/** Played where a dropped crystal lands */
 	UPROPERTY(EditDefaultsOnly, Category="Greed|Effects")
 	TObjectPtr<USoundBase> DropSound;
 
@@ -106,6 +109,7 @@ public:
 
 private:
 
+	/** Reads the crystal count from the PlayerState (0 if not assigned yet) and applies the speed */
 	void UpdateSpeedFromPlayerState();
 
 protected:
@@ -130,7 +134,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpStart();
 
-	/** Handles jump pressed inputs from either controls or UI interfaces */
+	/** Handles jump released inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 

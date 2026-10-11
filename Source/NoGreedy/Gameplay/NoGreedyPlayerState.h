@@ -4,14 +4,20 @@
 #include "GameFramework/PlayerState.h"
 #include "NoGreedyPlayerState.generated.h"
 
+/**
+ *  Per-player score. Lives on the PlayerState (not the pawn) so it survives the pawn being destroyed
+ *  and is visible to every client for the scoreboard.
+ */
 UCLASS()
 class NOGREEDY_API ANoGreedyPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
+	/** Crystals currently held; also slows the pawn down (see ANoGreedyCharacter::UpdateSpeedFromCrystals) */
 	UPROPERTY(ReplicatedUsing = OnRep_CrystalCount, VisibleAnywhere, BlueprintReadOnly, Category = "Greed", meta = (AllowPrivateAccess = "true"))
 	int32 CrystalCount = 0;
 
+	/** Out for the rest of the round: cannot collect, cannot lead, cannot win */
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Greed", meta = (AllowPrivateAccess = "true"))
 	bool bEliminated = false;
 

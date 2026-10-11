@@ -52,6 +52,7 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		return;
 	}
 
+	// Only players collect; the hunter AI walks through crystals
 	ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor);
 	if (!OverlappedCharacter || !OverlappedCharacter->IsPlayerControlled())
 	{
@@ -64,6 +65,7 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		return;
 	}
 
+	// The dropper is standing on their own crystal right after dropping it; ignore them until the lockout ends
 	if (DroppedByPlayer.IsValid() && DroppedByPlayer.Get() == PS && GetWorld()->GetTimeSeconds() < RecollectAvailableTime)
 	{
 		return;
@@ -74,6 +76,7 @@ void ACrystal::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		return;
 	}
 
+	// Stop further overlaps this frame so a second player cannot collect the same crystal
 	CollectionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// The crystal is destroyed below, so the multicast goes through the collector, who stays around

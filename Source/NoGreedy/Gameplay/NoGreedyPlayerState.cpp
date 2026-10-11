@@ -5,6 +5,7 @@
 
 bool ANoGreedyPlayerState::AddCrystals(int32 Amount)
 {
+	// Eliminated players can still lose crystals, which is how Eliminate() clears them
 	if (!HasAuthority() || (bEliminated && Amount > 0))
 	{
 		return false;

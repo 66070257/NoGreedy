@@ -64,6 +64,7 @@ AActor* ANoGreedyGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		return Super::ChoosePlayerStart_Implementation(Player);
 	}
 
+	// Sort by name so the order is stable, then use the player's join order to give everyone a different spot
 	SpawnPoints.Sort([](const AActor& A, const AActor& B) { return A.GetName() < B.GetName(); });
 
 	int32 Index = 0;
@@ -95,6 +96,7 @@ void ANoGreedyGameMode::EliminatePlayer(AController* Victim, AController* Killer
 		return;
 	}
 
+	// Clears the player's score and returns what they held, so it can be scattered for others to grab
 	const int32 Count = PS->Eliminate();
 
 	APawn* DeadPawn = Victim->GetPawn();
@@ -143,6 +145,7 @@ bool ANoGreedyGameMode::DropCrystal(AController* Dropper)
 		return false;
 	}
 
+	// Behind the pawn, so a player running forward does not walk straight back into it
 	const FVector SpawnLocation = Pawn->GetActorLocation() - Pawn->GetActorForwardVector() * DropDistance;
 
 	FActorSpawnParameters Params;

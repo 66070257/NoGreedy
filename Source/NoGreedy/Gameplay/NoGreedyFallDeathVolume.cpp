@@ -32,6 +32,7 @@ void ANoGreedyFallDeathVolume::OnBeginOverlap(AActor* OverlappedActor, AActor* O
 
 	if (ANoGreedyGameMode* GM = GetWorld()->GetAuthGameMode<ANoGreedyGameMode>())
 	{
+		// No killer, and bDropCrystals = false: crystals spawned at the bottom of a pit could never be collected
 		GM->EliminatePlayer(FallenPawn->GetController(), nullptr, false);
 	}
 }

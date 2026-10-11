@@ -99,6 +99,7 @@ void ANoGreedyCharacter::UpdateSpeedFromPlayerState()
 
 void ANoGreedyCharacter::UpdateSpeedFromCrystals(int32 CrystalCount)
 {
+	// Greed penalty: each crystal costs SpeedLossPerCrystal, clamped at MinSpeed
 	GetCharacterMovement()->MaxWalkSpeed = FMath::Max(BaseSpeed - SpeedLossPerCrystal * CrystalCount, MinSpeed);
 }
 
@@ -158,6 +159,7 @@ void ANoGreedyCharacter::DoDropCrystal()
 
 void ANoGreedyCharacter::ServerDropCrystal_Implementation()
 {
+	// Cooldown is enforced on the server so a client cannot spam drops
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (Now - LastDropTime < DropCooldown)
 	{

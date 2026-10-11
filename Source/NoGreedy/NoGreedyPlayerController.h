@@ -22,7 +22,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<TObjectPtr<UInputMappingContext>> DefaultMappingContexts;
 
-	/** Input Mapping Contexts */
+	/** Input Mapping Contexts added only when touch controls are not used (e.g. keyboard and mouse) */
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
 	TArray<TObjectPtr<UInputMappingContext>> MobileExcludedMappingContexts;
 

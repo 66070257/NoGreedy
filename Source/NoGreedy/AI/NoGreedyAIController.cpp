@@ -6,6 +6,7 @@ void ANoGreedyAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// AI controllers exist on the server only, where OnRoundOver is broadcast from EndRound
 	if (ANoGreedyGameState* GS = GetWorld()->GetGameState<ANoGreedyGameState>())
 	{
 		GS->OnRoundOver.AddDynamic(this, &ANoGreedyAIController::HandleRoundOver);

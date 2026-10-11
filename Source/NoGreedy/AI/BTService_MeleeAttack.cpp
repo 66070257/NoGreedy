@@ -10,6 +10,7 @@ UBTService_MeleeAttack::UBTService_MeleeAttack()
 	RandomDeviation = 0.0f;
 
 	bNotifyTick = true;
+	// Also attack right when the branch becomes active, instead of waiting for the first interval
 	bCallTickOnSearchStart = true;
 }
 

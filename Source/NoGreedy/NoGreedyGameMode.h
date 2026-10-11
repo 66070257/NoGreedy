@@ -5,7 +5,8 @@
 #include "NoGreedyGameMode.generated.h"
 
 /**
- *  Simple GameMode for a third person game
+ *  Server-only rules for NoGreedy: spawning players, eliminations, crystal drops and map travel.
+ *  Round state (timer, leader, winner) is kept in ANoGreedyGameState so clients can see it.
  */
 UCLASS(abstract)
 class NOGREEDY_API ANoGreedyGameMode : public AGameModeBase
@@ -14,9 +15,11 @@ class NOGREEDY_API ANoGreedyGameMode : public AGameModeBase
 
 public:
 
+	/** Moves every connected player to the Game map, keeping the listen server */
 	UFUNCTION(BlueprintCallable, Category="Rules")
 	void TravelToGame();
 
+	/** Moves every connected player back to the Lobby map, keeping the listen server */
 	UFUNCTION(BlueprintCallable, Category="Rules")
 	void TravelToLobby();
 
@@ -35,8 +38,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	bool bStartRound = true;
 
+	/** Gives each player their own TargetPoint tagged PlayerSpawnTag; falls back to PlayerStarts if none exist */
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
+	/** Schedules the return to the Lobby after RestartDelay */
 	UFUNCTION()
 	void HandleRoundOver(class ANoGreedyPlayerState* RoundWinner);
 
@@ -44,12 +49,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float RestartDelay = 5.f;
 
+	/** Actor tag that marks a TargetPoint as a player spawn */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	FName PlayerSpawnTag = TEXT("PlayerSpawn");
 
+	/** Crystal spawned for drops and eliminations */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	TSubclassOf<class ACrystal> CrystalClass;
 
+	/** An eliminated player's crystals are scattered randomly within this radius of where they died */
 	UPROPERTY(EditDefaultsOnly, Category="Rules")
 	float ScatterRadius = 300.f;
 

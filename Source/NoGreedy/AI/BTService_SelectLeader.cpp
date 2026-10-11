@@ -13,6 +13,7 @@ UBTService_SelectLeader::UBTService_SelectLeader()
 
 	bNotifyTick = true;
 
+	// Only let Actor object keys be picked for LeaderActorKey in the BT editor
 	LeaderActorKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTService_SelectLeader, LeaderActorKey), AActor::StaticClass());
 }
 
